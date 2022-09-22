@@ -966,6 +966,19 @@ ll_rx_get_again:
 	* (CONFIG_BT_OBSERVER && CONFIG_BT_CTLR_ADV_EXT)
 	*/
 
+#if defined(CONFIG_BT_CTLR_DF_SCAN_CTE_RX)
+			} else if (rx->type == NODE_RX_TYPE_IQ_SAMPLE_REPORT_LLL_RELEASE) {
+				const uint8_t report_cnt = 1U;
+
+				(void)memq_dequeue(memq_ll_rx.tail, &memq_ll_rx.head, NULL);
+				ll_rx_link_release(link);
+				ull_iq_report_link_inc_quota(report_cnt);
+				ull_df_iq_report_mem_release(rx);
+				ull_df_rx_iq_report_alloc(report_cnt);
+
+				goto ll_rx_get_again;
+#endif /* CONFIG_BT_CTLR_DF_SCAN_CTE_RX */
+
 #if defined(CONFIG_BT_CTLR_ADV_PERIODIC)
 			} else if (rx->type == NODE_RX_TYPE_SYNC_CHM_COMPLETE) {
 				rx_link_dequeue_release_quota_inc(link);
@@ -1673,14 +1686,14 @@ void ll_rx_release(void *node_rx)
 
 void ll_rx_put(memq_link_t *link, void *rx)
 {
-#if defined(CONFIG_BT_CONN)
+#if defined(CONFIG_BT_CONN) || defined(CONFIG_BT_CTLR_ADV_ISO)
 	struct node_rx_hdr *rx_hdr = rx;
 
 	/* Serialize Tx ack with Rx enqueue by storing reference to
 	 * last element index in Tx ack FIFO.
 	 */
 	rx_hdr->ack_last = mfifo_tx_ack.l;
-#endif /* CONFIG_BT_CONN */
+#endif /* CONFIG_BT_CONN || CONFIG_BT_CTLR_ADV_ISO */
 
 	/* Enqueue the Rx object */
 	memq_enqueue(link, rx, &memq_ll_rx.tail);
@@ -2741,6 +2754,7 @@ static inline int rx_demux_rx(memq_link_t *link, struct node_rx_hdr *rx)
 	case NODE_RX_TYPE_SYNC_IQ_SAMPLE_REPORT:
 	case NODE_RX_TYPE_CONN_IQ_SAMPLE_REPORT:
 	case NODE_RX_TYPE_DTM_IQ_SAMPLE_REPORT:
+	case NODE_RX_TYPE_IQ_SAMPLE_REPORT_LLL_RELEASE:
 	{
 		(void)memq_dequeue(memq_ull_rx.tail, &memq_ull_rx.head, NULL);
 		ll_rx_put(link, rx);

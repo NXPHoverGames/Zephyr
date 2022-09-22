@@ -253,6 +253,7 @@ Boards & SoC Support
   * renesas_smartbond da1469x SoC series
   * GigaDevice GD32E50X
   * GigaDevice GD32F470
+  * NXP i.MX8MN, LPC55S36, LPC51U68
 
 * Removed support for these SoC series:
 
@@ -275,6 +276,7 @@ Boards & SoC Support
   * GigaDevice GD32F450V-START
   * GigaDevice GD32F450Z-EVAL
   * GigaDevice GD32F470I-EVAL
+  * NXP lpcxpresso51u68, RT1060 EVKB
 
 * Added support for these ARM64 boards:
 
@@ -311,7 +313,7 @@ Drivers and Sensors
   * A driver for bridging from :ref:`native_posix` to Linux SocketCAN has been added.
   * A driver for the Espressif ESP32 TWAI has been added. See the
     :dtcompatible:`espressif,esp32-twai` devicetree binding for more information.
-  * The STM32 CAN-FD CAN driver clock configurion has been moved from Kconfig to :ref:`devicetree
+  * The STM32 CAN-FD CAN driver clock configuration has been moved from Kconfig to :ref:`devicetree
     <dt-guide>`. See the :dtcompatible:`st,stm32-fdcan` devicetree binding for more information.
   * The filter handling of STM32 bxCAN driver has been simplified and made more reliable.
   * The STM32 bxCAN driver now supports dual intances.
@@ -321,7 +323,7 @@ Drivers and Sensors
   * The Zephyr network CAN bus driver, which provides raw L2 access to the CAN bus via a CAN
     controller driver, has been moved to :zephyr_file:`drivers/net/canbus.c` and can now be enabled
     using :kconfig:option:`CONFIG_NET_CANBUS`.
-  * STM32: Now supports dual CAN instances.
+  * Added CAN support for NXP LPC55S36.
 
 * Clock control
 
@@ -334,6 +336,7 @@ Drivers and Sensors
 
   * STM32: RTC : Now supports STM32U5 and STM32F1 series.
   * STM32: Timer : Now supports STM32L4 series.
+  * Added counter support using CTimer for NXP MIMXRT595.
 
 * Crypto
 
@@ -354,6 +357,7 @@ Drivers and Sensors
   * cAVS drivers renamed with the broader Intel ADSP naming
   * Kconfig depends on improvements with device tree statuses
   * Added driver for GigaDevice GD32 SoCs
+  * Added DMA support for NXP MIMXRT595
 
 * EEPROM
 
@@ -367,6 +371,7 @@ Drivers and Sensors
 * Ethernet
 
   * Atmel gmac: Add EEPROM devicetree bindings for MAC address.
+  * Performance improvements on the NXP MCUX Ethernet Driver.
 
 * Flash
 
@@ -374,6 +379,8 @@ Drivers and Sensors
   * Added flash driver for Renesas Smartbond platform
   * STM32: Added OSPI NOR-flash driver. Supports STM32H7 and STM32U5. Supports DMA.
   * Added driver for GigaDevice GD32 SoCs
+  * Added Flash support for NXP LPCXpresso55S36.
+  * Added Flash support for NXP MIMXRT595 EVK.
 
 * GPIO
 
@@ -394,6 +401,8 @@ Drivers and Sensors
   * Improved ITE I2C support with FIFO and command queue mode
   * Improve gd32 driver stability (remove repeated START, use STOP + START conditions instead)
   * Fixed gd32 driver incorrect Fast-mode config
+  * Add bus recovery support to the NXP MCUX LPI2C driver.
+  * Enable I2C support on NXP MIMXRT595 EVK.
 
 * I2S
 
@@ -415,6 +424,9 @@ Drivers and Sensors
   * Kconfig is split into smaller, vendor oriented files.
   * Support for Intel S1000 in cAVS IDC driver has been removed as the board
     ``intel_s1000_crb`` has been removed.
+
+* KSCAN
+  * Enable the touch panel on the NXP MIMXRT1170 EVK.
 
 * LED
 
@@ -455,8 +467,12 @@ Drivers and Sensors
 * PWM
 
   * Added PWM driver for Renesas R-Car platform
+  * Added PWM support for NXP LPC55S36
 
 * Power Domain
+
+  * Enabled access to the PMIC on NXP MXRT595 EVK.
+  * Added soft off mode to the RT10xx Power Management.
 
 * Reset
 
@@ -503,12 +519,16 @@ Drivers and Sensors
 * SPI
 
   * Add interrupt-driven mode support for gd32 driver
+  * Enable SPI support on NXP MIMXRT595 EVK.
 
 * Timer
 
   * STM32 LPTIM based timer should now be configured using device tree.
 
 * USB
+
+  * Restructured the NXP MCUX USB driver.
+  * Added USB support for NXP MXRT595.
 
 * W1
 
@@ -522,16 +542,99 @@ Drivers and Sensors
 * Watchdog
 
   * Added support for Raspberry Pi Pico watchdog.
+  * Added watchdog support on NXP MIMXRT595 EVK.
 
 * WiFi
 
 Networking
 **********
 
-* ``CONFIG_NET_CONFIG_IEEE802154_DEV_NAME`` has been removed in favor of
-  using a Devicetree choice given by ``zephyr,ieee802154``.
+* CoAP:
 
-* Added new Wi-Fi offload APIs for retrieving status and statistics.
+  * Replaced constant CoAP retransmission count and acknowledgment random factor
+    with configurable :kconfig:option:`CONFIG_COAP_ACK_RANDOM_PERCENT` and
+    :kconfig:option:`CONFIG_COAP_MAX_RETRANSMIT`.
+  * Updated :c:func:`coap_packet_parse` and :c:func:`coap_handle_request` to
+    return different error code based on the reason of parsing error.
+
+* Ethernet:
+
+  * Added EAPoL and IEEE802154 Ethernet protocol types.
+
+* HTTP:
+
+  * Improved API documentation.
+
+* LwM2M:
+
+  * Moved LwM2M 1.1 support out of experimental.
+  * Refactored SenML-JSON and JSON econder/decoder to use Zephyr's JSON library
+    internally.
+  * Extended LwM2M shell module with the following commands: ``exec``, ``read``,
+    ``write``, ``start``, ``stop``, ``update``, ``pause``, ``resume``.
+  * Refactored LwM2M engine module into smaller sub-modules: LwM2M registry,
+    LwM2M observation, LwM2M message handling.
+  * Added an implementation of the LwM2M Access Control object (object ID 2).
+  * Added support for LwM2M engine pause/resume.
+  * Improved API documentation of the LwM2M engine.
+  * Improved thread safety of the LwM2M library.
+  * Added :c:func:`lwm2m_registry_lock` and :c:func:`lwm2m_registry_unlock`
+    functions, which allow to update multiple resources w/o sending a
+    notification for every update.
+  * Multiple minor fixes/improvements.
+
+* Misc:
+
+  * ``CONFIG_NET_CONFIG_IEEE802154_DEV_NAME`` has been removed in favor of
+    using a Devicetree choice given by ``zephyr,ieee802154``.
+  * Fixed net_pkt leak with shallow clone.
+  * Fixed websocket build with :kconfig:option:`CONFIG_POSIX_API`.
+  * Extracted zperf shell commands into a library.
+  * Added support for building and using IEEE 802.15.4 L2 without IP support.
+  * General clean up of inbound packet handling.
+  * Added support for restarting DHCP w/o randomized delay.
+  * Fixed a bug, where only one packet could be queued on a pending ARP
+    request.
+
+* OpenThread:
+
+  * Moved OpenThread glue code into ``modules`` directory.
+  * Fixed OpenThread build with :kconfig:option:`CONFIG_NET_MGMT_EVENT_INFO`
+    disabled.
+  * Fixed mbed TLS configuration for Service Registration Protocol (SRP)
+    OpenThread feature.
+  * Added Kconfig option to enable Thread 1.3 support
+    (:kconfig:option:`CONFIG_OPENTHREAD_THREAD_VERSION_1_3`).
+  * Updated :c:func:`otPlatSettingsSet` according to new API documentation.
+  * Added new Kconfig options:
+
+    * :kconfig:option:`CONFIG_OPENTHREAD_MESSAGE_BUFFER_SIZE`
+    * :kconfig:option:`CONFIG_OPENTHREAD_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS`
+
+* Sockets:
+
+  * Fixed filling of the address structure provided in :c:func:`recvfrom` for
+    packet socket.
+  * Fixed a potential deadlock in TCP :c:func:`send` call.
+  * Added support for raw 802.15.4 packet socket.
+
+* TCP:
+
+  * Added support for Nagle's algorithm.
+  * Added "Silly Window Syndrome" avoidance.
+  * Fixed MSS calculation.
+  * Avoid unnecessary packet cloning on the RX path.
+  * Implemented randomized retransmission timeouts and exponential backoff.
+  * Fixed out-of-order data processing.
+  * Implemented fast retransmit algorithm.
+  * Multiple minor fixes/improvements.
+
+* Wi-Fi
+
+  * Added support for using offloaded wifi_mgmt API with native network stack.
+  * Extended Wi-Fi headers with additional Wi-Fi parameters (security, bands,
+    modes).
+  * Added new Wi-Fi management APIs for retrieving status and statistics.
 
 USB
 ***
@@ -606,6 +709,24 @@ Libraries / Subsystems
     type, from :c:func:`zephyr_smp_transport_out_fn` type callback as it has
     not been used, and the ``nb`` parameter, of :c:struct:`net_buf` type,
     can carry additional transport information when needed.
+  * A dummy SMP transport has been added which allows for testing MCUMGR
+    functionality and commands/responses.
+  * An issue with the UART/shell transports whereby large packets would wrongly
+    be split up with multiple start-of-frame headers instead of only one has been
+    fixed.
+  * SMP now runs in its own dedicated work queue which prevents issues running in
+    the system workqueue with some transports, e.g. Bluetooth, which previously
+    caused a deadlock if buffers could not be allocated.
+  * Bluetooth transport will now reduce the size of packets that are sent if they
+    are too large for the remote device instead of failing to send them, if the
+    remote device cannot accept a notification of 20 bytes then the attempt is
+    aborted.
+  * Unaligned memory access problems for CPUs that do not support it in MCUMGR
+    headers has been fixed.
+  * Groups in MCUMGR now use kernel slist entries rather than the custom MCUMGR
+    structs for storage.
+  * Levels of function redirection which were previously used to support multiple
+    OS's have been reduced to simplify code and reduce output size.
 
 * Cbprintf and logging
 
@@ -632,6 +753,16 @@ Libraries / Subsystems
 * Modbus
 
 * Power management
+
+* POSIX
+
+  * Make ``tz`` non-const in ``gettimeofday()`` for conformance to spec.
+  * Fix pthread descriptor resource leak. Previously only pthreads with state
+    ``PTHREAD_TERMINATED`` could be reused. However, ``pthread_join()`` sets
+    the state to ``PTHREAD_EXITED``. Consider both states as candidates in
+    ``pthread_create()``.
+  * Add ``perror()`` implementation
+  * Use consistent timebase in ``sem_timedwait()``
 
 * RTIO
 
@@ -670,6 +801,11 @@ HALs
   * gd32f4xx: upgraded to v3.0.0
 
 * NXP
+
+  * Updated the NXP MCUX SDK to version 2.12
+  * Updated the USB middleware to version 2.12
+  * Removed all binary Blobs for power management libraries
+  * Removed all binary archive files
 
 * Nordic
 
