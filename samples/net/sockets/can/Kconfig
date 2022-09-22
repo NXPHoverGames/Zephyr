@@ -12,4 +12,12 @@ config SAMPLE_SOCKETCAN_LOOPBACK_MODE
 	  Set the controller to loopback mode.
 	  This allows testing without a second board.
 
+config NET_SOCKETS_CAN_TRANSMITTERS
+	int "Number of Transmitters"
+	default 1
+	help
+	  Set the number of transmitters.
+	  This allows testing wit multiple transmitters.
+
+
 source "Kconfig.zephyr"

@@ -5,3 +5,17 @@ config BOARD_RDDRONE_FMUK66
 	bool "NXP RDDRONE-FMUK66"
 	depends on SOC_SERIES_KINETIS_K6X
 	select SOC_PART_NUMBER_MK66FN2M0VLQ18
+
+config RDDRONE_FMUK66_INIT_PRIORITY
+	int "Init priority"
+	default 79
+        depends on BOARD_RDDRONE_FMUK66
+	help
+	  Initialization priority of the rddrone_fmuk66
+
+config CONFIG_NET_SOCKETS_CAN_TRANSMITTERS
+	int "Socketcan devices"
+	default 2
+	depends on BOARD_RDDRONE_FMUK66
+	help
+	  Specifies the number of socketcan devices on rddrone_fmuk66
