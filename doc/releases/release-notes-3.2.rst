@@ -45,6 +45,10 @@ Changes in this release
   changes are required by applications other than replacing ``#include
   <zephyr/zephyr.h>`` with ``#include <zephyr/kernel.h>``.
 
+* Bluetooth: Applications where :kconfig:option:`CONFIG_BT_EATT` is enabled
+  must set the :c:member:`chan_opt` field on the GATT parameter structs.
+  To keep the old behavior use :c:enumerator:`BT_ATT_CHAN_OPT_NONE`.
+
 * CAN
 
   * The Zephyr SocketCAN definitions have been moved from :zephyr_file:`include/zephyr/drivers/can.h`
@@ -105,6 +109,8 @@ Removed APIs in this release
 
 * Removed support for configuring the CAN-FD maximum DLC value via Kconfig
   ``CONFIG_CANFD_MAX_DLC``.
+
+* Removed deprecated civetweb module and the associated support code and samples.
 
 Deprecated in this release
 ==========================
@@ -223,26 +229,98 @@ Bluetooth
 
 * Audio
 
+  * Implemented central security establishment when required
+  * Added additional security level options to the connection call
+  * Switched the unicast client and server to bidirectional CIS if available
+  * Added a new RSI advertising callback for CSIS
+  * Added multiple improvements to context handling, including public functions
+    to get contexts
+  * Added ordered access procedure for the CSIS client, as well as storing
+    active members by rank
+  * Added support for Write Preset Name in HAS
+  * Added support for using PACS for the broadcast sink role
+  * Cleaned up the MICP implementation, including renaming several structures
+    and functions
+  * Implemented the CAP Acceptor role
+  * Added ASCS Metadata verification support
+  * Started exposing broadcast sink advertising data to the application
+  * Added support for unicast server start, reconfigure, release, disable and
+    metadata
+  * Added support for multi-CIS
+  * Implemented HAS client support for preset switching
+  * Added support for setting vendor-specific non-HCI data paths for audio
+    streams
+
 * Direction Finding
+
+  * Added support for selectable IQ samples conversion to 8-bit
+  * Added support for VS IQ sample reports in ``int16_t`` format
 
 * Host
 
-  * Added a new callback :c:func:`rpa_expired` in the struct :c:struct:`bt_le_ext_adv_cb`
-    to enable synchronization of the advertising payload updates with the Resolvable Private
-    Address (RPA) rotations when the :kconfig:option:`CONFIG_BT_PRIVACY` is enabled.
-  * Added a new :c:func:`bt_le_set_rpa_timeout()` API call to dynamically change the
-    the Resolvable Private Address (RPA) timeout when the :kconfig:option:`CONFIG_BT_RPA_TIMEOUT_DYNAMIC`
-    is enabled.
-  * Added :c:func:`bt_conn_auth_cb_overlay` to overlay authentication callbacks for a Bluetooth LE connection.
-  * Removed ``CONFIG_BT_HCI_ECC_STACK_SIZE``.
-    The Bluetooth long workqueue (:kconfig:option:`CONFIG_BT_LONG_WQ`) is used for processing ECC commands instead of the dedicated thread.
-  * :c:func:`bt_conn_get_security` and `bt_conn_enc_key_size` now take a ``const struct bt_conn*`` argument.
+  * Added support for LE Secure Connections permission checking
+  * Added support for Multiple Variable Length Read procedure without EATT
+  * Added a new callback :c:func:`rpa_expired` in the struct
+    :c:struct:`bt_le_ext_adv_cb` to enable synchronization of the advertising
+    payload updates with the Resolvable Private Address (RPA) rotations when
+    the :kconfig:option:`CONFIG_BT_PRIVACY` is enabled
+  * Added a new :c:func:`bt_le_set_rpa_timeout()` API call to dynamically change
+    the the Resolvable Private Address (RPA) timeout when the
+    :kconfig:option:`CONFIG_BT_RPA_TIMEOUT_DYNAMIC` is enabled
+  * Added :c:func:`bt_conn_auth_cb_overlay` to overlay authentication callbacks
+    for a Bluetooth LE connection
+  * Removed ``CONFIG_BT_HCI_ECC_STACK_SIZE``. A new Bluetooth long workqueue
+    (:kconfig:option:`CONFIG_BT_LONG_WQ`) is used for processing ECC commands
+    instead of the former dedicated thread
+  * :c:func:`bt_conn_get_security` and :c:func:`bt_conn_enc_key_size` now take
+    a ``const struct bt_conn*`` argument
+  * The handling of GATT multiple notifications has been rewritten, and is now
+    only to be used as a low-level API
+  * Added support for GATT CCCs in arbitrary locations as a client
+  * Extended the ``bt_conn_info`` structure with security information
+  * Added a new :kconfig:option:`CONFIG_BT_PRIVACY_RANDOMIZE_IR` that prevents
+    the Host from using Controller-provided identity roots
+  * Added support for GATT over EATT
+  * Implemented the Immediate Alert Client
 
 * Mesh
 
+  * Added support for selectable RPL backends
+  * Changed the way segmented messages are sent, avoiding bulk transmission
+  * Added an async config client API
+  * Added model publish support to the Health Client
+  * Moved relayed messages to a separate buffer pool
+  * Reduced delay of sending segment acknowledge message. Set
+    :kconfig:option:`CONFIG_BT_MESH_SEG_ACK_PER_SEGMENT_TIMEOUT` to 100 to get
+    the previous timing.
+  * Restructured shell commands
+
 * Controller
 
+  * Made the new LLCP implementation the default one. Enable
+    :kconfig:option:`CONFIG_BT_LL_SW_LLCP_LEGACY` to revert back to the legacy
+    implementation
+  * Marked Extended Advertising as stable, no longer experimental
+  * Added deinit() infrastructure in order to properly support disabling
+    Bluetooth support, including the controller
+  * Implemented the Peripheral CIS Create procedure
+  * Implemented the CIS Terminate procedure
+  * Added support for Periodic Advertising ADI
+  * Implemented support for Extended Scan Response Data fragment operations
+  * Enable back-to-back PDU chaining for AD data
+  * Added a new :kconfig:option:`CONFIG_BT_CTLR_SYNC_PERIODIC_SKIP_ON_SCAN_AUX`
+    for allowing periodic sync event skipping
+  * Added a new :kconfig:option:`CONFIG_BT_CTLR_SCAN_AUX_SYNC_RESERVE_MIN` for
+    minimal time resevation
+  * Implemented ISO Test Mode HCI commands
+  * Added support for multiple BIS sync selection within a BIG
+  * Implement flushing pending ISO TX PDUs when a BIG event is terminated
+  * Added a new :kconfig:option:`CONFIG_BT_CTLR_ADV_DATA_CHAIN` to enable
+    experimental Advertising Data chaining support
+
 * HCI Driver
+
+  * Added a new Telink B91 HCI driver
 
 Boards & SoC Support
 ********************
@@ -250,43 +328,60 @@ Boards & SoC Support
 * Added support for these SoC series:
 
   * Atmel SAML21, SAMR34, SAMR35.
-  * renesas_smartbond da1469x SoC series
   * GigaDevice GD32E50X
   * GigaDevice GD32F470
   * NXP i.MX8MN, LPC55S36, LPC51U68
-
-* Removed support for these SoC series:
+  * renesas_smartbond da1469x SoC series
 
 * Made these changes in other SoC series:
 
   * gigadevice: Enable SEGGER RTT
 
-* Changes for ARC boards:
-
 * Added support for these ARM boards:
 
+  * Arduino MKR Zero
   * Atmel atsaml21_xpro
   * Atmel atsamr34_xpro
-  * da1469x_dk_pro
-  * ST STM32F7508-DK Discovery Kit
-  * WeAct Studio Black Pill V3.0
-  * GigaDevice GD32E507Z-EVAL
+  * Blues Wireless Swan
+  * Digilent Zybo
+  * EBYTE E73-TBB
   * GigaDevice GD32E507V-START
+  * GigaDevice GD32E507Z-EVAL
   * GigaDevice GD32F407V-START
   * GigaDevice GD32F450V-START
   * GigaDevice GD32F450Z-EVAL
   * GigaDevice GD32F470I-EVAL
   * NXP lpcxpresso51u68, RT1060 EVKB
+  * NXP lpcxpresso55s36
+  * Olimex LoRa STM32WL DevKit
+  * PAN1770 Evaluation Board
+  * PAN1780 Evaluation Board
+  * PAN1781 Evaluation Board
+  * PAN1782 Evaluation Board
+  * ST STM32F7508-DK Discovery Kit
+  * TDK RoboKit 1
+  * WeAct Studio Black Pill V1.2
+  * WeAct Studio Black Pill V3.0
+  * XIAO BLE
+  * da1469x_dk_pro
 
 * Added support for these ARM64 boards:
 
-  * i.MX8M Nano LPDDR4 EVK board
-
-* Removed support for these ARM boards:
-
-* Removed support for these X86 boards:
+  * i.MX8M Nano LPDDR4 EVK board series
 
 * Added support for these RISC-V boards:
+
+  * ICE-V Wireless
+  * RISCV32E Emulation (QEMU)
+
+* Added support for these Xtensa boards:
+
+  * ESP32-NET
+  * intel_adsp_ace15_mtpm
+
+* Removed support for these Xtensa boards:
+
+  * Intel S1000
 
 * Made these changes in other boards:
 
@@ -296,6 +391,7 @@ Boards & SoC Support
 * Added support for these following shields:
 
   * ARCELI W5500 ETH
+  * MAX7219 LED display driver shield
   * Panasonic Grid-EYE (AMG88xx)
 
 Drivers and Sensors
@@ -419,6 +515,10 @@ Drivers and Sensors
 
 * Interrupt Controller
 
+  * Added support for ACE V1X.
+  * Fixed an addressing issue on GICv3 controllers.
+  * Removed support for ``intel_s1000_crb``.
+
 * IPM
 
   * Kconfig is split into smaller, vendor oriented files.
@@ -435,6 +535,8 @@ Drivers and Sensors
 * MBOX
 
 * MEMC
+
+  * Added support for Atmel SAM SMC/EBI.
 
 * MM
 
@@ -473,6 +575,7 @@ Drivers and Sensors
 
   * Enabled access to the PMIC on NXP MXRT595 EVK.
   * Added soft off mode to the RT10xx Power Management.
+  * Added support for power gating for Intel ADSP devices.
 
 * Reset
 
@@ -773,7 +876,8 @@ Libraries / Subsystems
 
 * SD Subsystem
 
-  * SDMMC STM32: Added DMA support and now compatible with STM32L5 series.
+  * SDMMC STM32: Now compatible with STM32L5 series. Added DMA support for DMA-V1
+    compatible devices.
 
 * Settings
 
@@ -850,6 +954,10 @@ Documentation
 
 Tests and Samples
 *****************
+
+* A large number of tests have been reworked to use the new ztest API, see
+  :ref:`test-framework` for more details. This should be used for newly
+  introduce tests as well.
 
 Issue Related Items
 *******************
