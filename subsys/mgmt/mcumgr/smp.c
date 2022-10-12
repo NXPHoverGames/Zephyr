@@ -47,7 +47,6 @@ static const struct k_work_queue_config smp_work_queue_config = {
  */
 void *zephyr_smp_alloc_rsp(const void *req, void *arg)
 {
-	const struct net_buf_pool *pool;
 	const struct net_buf *req_nb;
 	struct net_buf *rsp_nb;
 	struct zephyr_smp_transport *zst = arg;
@@ -62,7 +61,6 @@ void *zephyr_smp_alloc_rsp(const void *req, void *arg)
 	if (zst->zst_ud_copy) {
 		zst->zst_ud_copy(rsp_nb, req_nb);
 	} else {
-		pool = net_buf_pool_get(req_nb->pool_id);
 		memcpy(net_buf_user_data(rsp_nb),
 		       net_buf_user_data((void *)req_nb),
 		       req_nb->user_data_size);
@@ -86,21 +84,6 @@ void zephyr_smp_free_buf(void *buf, void *arg)
 	mcumgr_buf_free(buf);
 }
 
-static int
-zephyr_smp_tx_rsp(struct smp_streamer *ns, void *rsp, void *arg)
-{
-	struct zephyr_smp_transport *zst;
-	struct net_buf *nb;
-
-	zst = arg;
-	nb = rsp;
-
-	/* Pass full packet to output function so it can be transmitted or split into frames as
-	 * needed by the transport
-	 */
-	return zst->zst_output(nb);
-}
-
 /**
  * Processes a single SMP packet and sends the corresponding response(s).
  */
@@ -114,12 +97,9 @@ zephyr_smp_process_packet(struct zephyr_smp_transport *zst,
 	int rc;
 
 	streamer = (struct smp_streamer) {
-		.mgmt_stmr = {
-			.reader = &reader,
-			.writer = &writer,
-			.cb_arg = zst,
-		},
-		.tx_rsp_cb = zephyr_smp_tx_rsp,
+		.reader = &reader,
+		.writer = &writer,
+		.smpt = zst,
 	};
 
 	rc = smp_process_request_packet(&streamer, nb);

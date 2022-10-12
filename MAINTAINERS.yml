@@ -198,6 +198,7 @@ Bluetooth:
     - tests/bluetooth/controller/
     - tests/bluetooth/mesh_*/
     - tests/bluetooth/mesh/
+    - tests/bluetooth/shell/audio*
   labels:
     - "area: Bluetooth"
 
@@ -241,7 +242,6 @@ Bluetooth Audio:
   status: maintained
   maintainers:
     - Thalley
-    - asbjornsabo
   collaborators:
     - Vudentz
     - jhedberg
@@ -249,10 +249,12 @@ Bluetooth Audio:
     - MariuszSkamra
     - rymanluk
     - sjanc
+    - asbjornsabo
   files:
     - subsys/bluetooth/audio/
     - include/zephyr/bluetooth/audio/
     - tests/bluetooth/bsim_bt/bsim_test_audio/
+    - tests/bluetooth/shell/audio*
   labels:
     - "area: Bluetooth Audio"
     - "area: Bluetooth"
@@ -281,6 +283,7 @@ Build system:
     - stephanosio
   collaborators:
     - alexanderwachter
+    - cfriedt
   files:
     - subsys/cpp/
     - tests/subsys/cpp/
@@ -412,11 +415,9 @@ Devicetree:
   status: maintained
   maintainers:
     - mbolivar-nordic
-  collaborators:
     - galak
   files:
     - scripts/dts/
-    - dts/bindings/
     - dts/common/
     - tests/lib/devicetree/
     - doc/build/dts/
@@ -424,6 +425,15 @@ Devicetree:
     - scripts/kconfig/kconfigfunctions.py
   labels:
     - "area: Devicetree"
+
+Devicetree Bindings:
+  status: maintained
+  maintainers:
+    - galak
+  files:
+    - dts/bindings/
+  labels:
+    - "area: Devicetree Binding"
 
 Disk:
   status: maintained
@@ -490,6 +500,16 @@ Documentation Infrastructure:
     - doc/zephyr.doxyfile.in
   labels:
     - "area: Documentation Infrastructure"
+
+Release Notes:
+  status: maintained
+  maintainers:
+    - laurenmurphyx64
+    - stephanosio
+  files:
+    - doc/releases/release-notes-*
+  labels:
+    - "Release Notes"
 
 "Drivers: ADC":
   status: maintained
@@ -1278,6 +1298,7 @@ Laird Connectivity platforms:
     - boards/arm/bt510/
     - boards/arm/bt610/
     - boards/arm/pinnacle_100_dvk/
+    - boards/arm/mg100/
   labels:
     - "platform: Laird Connectivity"
 
@@ -1749,8 +1770,6 @@ Nuvoton Numicro Platforms:
 
 SiLabs Platforms:
   status: odd fixes
-  collaborators:
-    - chrta
   files:
     - soc/arm/silabs_*/
     - boards/arm/ef*/
@@ -2332,7 +2351,6 @@ West:
   collaborators:
     - yonsch
     - mnkp
-    - chrta
   files:
     - modules/Kconfig.silabs
   labels:
@@ -2566,7 +2584,6 @@ West:
     - marc-hb
   files:
     - modules/Kconfig.sof
-    - samples/modules/sof/
   labels:
     - manifest-sof
 

@@ -11,6 +11,7 @@
 #endif
 #include <zephyr/drivers/spi.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/kernel.h>
 
 #define FXAS21002_REG_STATUS		0x00
 #define FXAS21002_REG_OUTXMSB		0x01

@@ -11,6 +11,7 @@
 #include <zephyr/drivers/i2c.h>
 #endif
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/kernel.h>
 
 #define FXOS8700_REG_STATUS			0x00
 #define FXOS8700_REG_OUTXMSB			0x01

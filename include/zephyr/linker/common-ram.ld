@@ -73,8 +73,6 @@
 		__log_dynamic_end = .;
 	} GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
 
-	ITERABLE_SECTION_RAM(_static_thread_data, 4)
-
 #ifdef CONFIG_USERSPACE
 	/* All kernel objects within are assumed to be either completely
 	 * initialized at build time, or initialized automatically at runtime
@@ -88,7 +86,6 @@
 
 	ITERABLE_SECTION_RAM_GC_ALLOWED(k_timer, 4)
 	ITERABLE_SECTION_RAM_GC_ALLOWED(k_mem_slab, 4)
-	ITERABLE_SECTION_RAM_GC_ALLOWED(k_mem_pool, 4)
 	ITERABLE_SECTION_RAM_GC_ALLOWED(k_heap, 4)
 	ITERABLE_SECTION_RAM_GC_ALLOWED(k_mutex, 4)
 	ITERABLE_SECTION_RAM_GC_ALLOWED(k_stack, 4)
