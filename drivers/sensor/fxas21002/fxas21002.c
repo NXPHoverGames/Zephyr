@@ -309,9 +309,9 @@ static int fxas21002_init(const struct device *dev)
 	struct fxas21002_data *data = dev->data;
 	uint32_t transition_time;
 	uint8_t whoami;
+#if DT_ANY_INST_ON_BUS_STATUS_OKAY(i2c)
 	uint8_t ctrlreg1;
 
-#if DT_ANY_INST_ON_BUS_STATUS_OKAY(i2c)
 	if (!device_is_ready(config->i2c.bus)) {
 		LOG_ERR("I2C bus device not ready");
 #elif DT_ANY_INST_ON_BUS_STATUS_OKAY(spi)
@@ -430,11 +430,22 @@ static const struct sensor_driver_api fxas21002_driver_api = {
 #endif
 };
 
+#define FXAS21002_CONFIG_I2C(inst)						                \
+		.i2c = I2C_DT_SPEC_INST_GET(inst),				                \
+                .ops = &fxas21002_i2c_ops,                                                      \
+
+#define FXAS21002_CONFIG_SPI(inst)						                \
+		.spi = SPI_DT_SPEC_INST_GET(inst, 				                \
+			SPI_OP_MODE_MASTER | SPI_WORD_SET(8), 0),	                        \
+                .ops = &fxas21002_spi_ops,                                                      \
+
 #define FXAS21002_DEFINE(inst)									\
 	static struct fxas21002_data fxas21002_data_##inst;					\
 												\
 	static const struct fxas21002_config fxas21002_config_##inst = {			\
-		.i2c = I2C_DT_SPEC_INST_GET(inst),						\
+	COND_CODE_1(DT_INST_ON_BUS(inst, spi),				                        \
+		(FXAS21002_CONFIG_SPI(inst)),				                        \
+		(FXAS21002_CONFIG_I2C(inst)))				                        \
 		.whoami = CONFIG_FXAS21002_WHOAMI,						\
 		.range = CONFIG_FXAS21002_RANGE,						\
 		.dr = CONFIG_FXAS21002_DR,							\
@@ -444,6 +455,7 @@ static const struct sensor_driver_api fxas21002_driver_api = {
 									      { 0 }),),		\
 					(.int_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, int2_gpios,	\
 									      { 0 }),))))	\
+	        .reset_gpio = GPIO_DT_SPEC_INST_GET(inst, reset_gpios),                         \
 	};											\
 												\
 	DEVICE_DT_INST_DEFINE(inst, fxas21002_init, NULL,					\
@@ -452,32 +464,3 @@ static const struct sensor_driver_api fxas21002_driver_api = {
 			      &fxas21002_driver_api);						\
 
 DT_INST_FOREACH_STATUS_OKAY(FXAS21002_DEFINE)
-
-/*433-454: comp
-static const struct fxas21002_config fxas21002_config = {
-#if DT_ANY_INST_ON_BUS_STATUS_OKAY(i2c)
-	.i2c = I2C_DT_SPEC_INST_GET(0),
-        .ops = &fxas21002_i2c_ops,
-#elif DT_ANY_INST_ON_BUS_STATUS_OKAY(spi)
-	.spi = SPI_DT_SPEC_INST_GET(0, SPI_OP_MODE_MASTER | SPI_WORD_SET(8), 0),
-        .ops = &fxas21002_spi_ops,
-#endif
-	.whoami = CONFIG_FXAS21002_WHOAMI,
-	.range = CONFIG_FXAS21002_RANGE,
-	.dr = CONFIG_FXAS21002_DR,
-#ifdef CONFIG_FXAS21002_TRIGGER
-#ifdef CONFIG_FXAS21002_DRDY_INT1
-	.int_gpio = GPIO_DT_SPEC_INST_GET(0, int1_gpios),
-#else
-	.int_gpio = GPIO_DT_SPEC_INST_GET(0, int2_gpios),
-#endif
-#endif
-	.reset_gpio = GPIO_DT_SPEC_INST_GET(0, reset_gpios),
-};
-
-static struct fxas21002_data_##inst fxas21002_data_##inst;
-
-DEVICE_DT_INST_DEFINE(0, fxas21002_init, NULL,
-		    &fxas21002_data_##inst, &fxas21002_config_##inst,
-		    POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY,
-		    &fxas21002_driver_api);*/
