@@ -192,7 +192,7 @@ uint8_t ll_big_create(uint8_t big_handle, uint8_t adv_handle, uint8_t num_bis,
 	/* TODO: parameters to ULL if only accessed by ULL */
 	lll_adv_iso = &adv_iso->lll;
 	lll_adv_iso->handle = big_handle;
-	lll_adv_iso->max_pdu = LL_BIS_OCTETS_TX_MAX;
+	lll_adv_iso->max_pdu = MIN(LL_BIS_OCTETS_TX_MAX, max_sdu);
 	lll_adv_iso->phy = phy;
 	lll_adv_iso->phy_flags = PHY_FLAGS_S8;
 
@@ -860,7 +860,9 @@ static uint32_t adv_iso_start(struct ll_adv_iso_set *adv_iso,
 						   ticks_slot, &ticks_anchor);
 	if (!err) {
 		ticks_anchor += HAL_TICKER_US_TO_TICKS(
-			EVENT_TICKER_RES_MARGIN_US);
+					MAX(EVENT_MAFS_US,
+					    EVENT_OVERHEAD_START_US) +
+					(EVENT_TICKER_RES_MARGIN_US << 1));
 	} else {
 		ticks_anchor = ticker_ticks_now_get();
 	}

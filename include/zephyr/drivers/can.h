@@ -348,6 +348,9 @@ typedef int (*can_set_mode_t)(const struct device *dev, can_mode_t mode);
 /**
  * @brief Callback API upon sending a CAN frame
  * See @a can_send() for argument description
+ *
+ * @note From a driver perspective `callback` will never be `NULL` as a default callback will be
+ * provided if none is provided by the caller. This allows for simplifying the driver handling.
  */
 typedef int (*can_send_t)(const struct device *dev,
 			  const struct can_frame *frame,
@@ -975,7 +978,8 @@ static inline int z_impl_can_start(const struct device *dev)
  * @brief Stop the CAN controller
  *
  * Bring the CAN controller into `CAN_STATE_STOPPED`. This will disallow the CAN controller from
- * participating in CAN communication and disable the CAN transceiver, if supported.
+ * participating in CAN communication, abort any pending CAN frame transmissions, and disable the
+ * CAN transceiver, if supported.
  *
  * @see can_start()
  * @see can_transceiver_disable()
@@ -1094,15 +1098,6 @@ __syscall int can_set_bitrate(const struct device *dev, uint32_t bitrate);
 __syscall int can_send(const struct device *dev, const struct can_frame *frame,
 		       k_timeout_t timeout, can_tx_callback_t callback,
 		       void *user_data);
-
-static inline int z_impl_can_send(const struct device *dev, const struct can_frame *frame,
-				  k_timeout_t timeout, can_tx_callback_t callback,
-				  void *user_data)
-{
-	const struct can_driver_api *api = (const struct can_driver_api *)dev->api;
-
-	return api->send(dev, frame, timeout, callback, user_data);
-}
 
 /** @} */
 
