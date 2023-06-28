@@ -2,6 +2,9 @@ name: Manifest
 on:
   pull_request_target:
 
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
 jobs:
   contribs:
     runs-on: ubuntu-22.04
@@ -25,3 +28,5 @@ jobs:
           verbosity-level: '1'
           labels: 'manifest'
           dnm-labels: 'DNM'
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

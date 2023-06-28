@@ -1,0 +1,9 @@
+# Copyright (c) 2022 Abel Sensors
+# SPDX-License-Identifier: Apache-2.0
+
+description: U-blox NEO-M8 GNSS Module
+
+compatible: "u-blox,neom8"
+
+include: uart-device.yaml
+include: i2c-device.yaml
