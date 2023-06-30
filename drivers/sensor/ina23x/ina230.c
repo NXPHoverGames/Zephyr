@@ -191,7 +191,7 @@ static int ina230_calibrate(const struct device *dev)
 	int ret;
 
 	/* See datasheet "Programming" section */
-	val = (INA230_CAL_SCALING * 10000U) /
+	val = (INA230_CAL_SCALING * 10000U * 1000U) /
 	      (config->current_lsb * config->rshunt);
 
 	ret = ina23x_reg_write(&config->bus, INA230_REG_CALIB, val);
@@ -276,7 +276,7 @@ static const struct sensor_driver_api ina230_driver_api = {
 		.bus = I2C_DT_SPEC_INST_GET(inst),		    \
 		.config = DT_INST_PROP(inst, config),		    \
 		.current_lsb = DT_INST_PROP(inst, current_lsb_microamps),\
-		.rshunt = DT_INST_PROP(inst, rshunt_milliohms),	    \
+		.rshunt = DT_INST_PROP(inst, rshunt_microohms),	    \
 		COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, alert_gpios),\
 			    (INA230_CFG_IRQ(inst)), ())		    \
 	};							    \

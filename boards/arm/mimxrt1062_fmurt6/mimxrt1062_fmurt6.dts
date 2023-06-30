@@ -10,6 +10,7 @@
 #include "mimxrt1062_fmurt6-pinctrl.dtsi"
 #include <zephyr/dt-bindings/pwm/pwm.h>
 #include <freq.h>
+#include <zephyr/dt-bindings/sensor/ina230.h>
 
 / {
 	model = "NXP MIMXRT1062 FMURT6 board";
@@ -247,6 +248,7 @@
 	};
 };
 
+
 &lpi2c1 {
 	status = "okay";
 	pinctrl-0 = <&pinmux_lpi2c1>;
@@ -256,10 +258,13 @@
         ina230: ina230@41 {
                 compatible = "ti,ina230";
                 reg = <0x41>;
-                config = <0>;
-                current-lsb-microamps = <1000>;
-                rshunt-milliohms = <2>;
-                mask = <0>;
+                config = <INA230_CONFIG(
+			INA230_OPER_MODE_SHUNT_BUS_VOLTAGE_CONT,
+			INA230_CONV_TIME_2116,
+			INA230_CONV_TIME_2116,
+			INA230_AVG_MODE_64)>;
+                current-lsb-microamps = <5000>;
+                rshunt-microohms = <83>;
         };
 };
 
