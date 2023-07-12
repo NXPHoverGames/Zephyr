@@ -1,0 +1,8 @@
+# Copyright (c) 2022 Abel Sensors
+# SPDX-License-Identifier: Apache-2.0
+
+description: IST8310 MAG Module
+
+compatible: "ist8310"
+
+include: i2c-device.yaml

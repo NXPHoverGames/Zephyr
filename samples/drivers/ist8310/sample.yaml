@@ -1,0 +1,12 @@
+#
+# Copyright (c) 2022 Abel Sensors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+sample:
+	 description: Demonstration of IST8310 MAG module
+	 name: IST8310 Sample
+tests:
+	 sample.driver.ist8310:
+			build_only: true
+			platform_allow: rddrone_fmurt6

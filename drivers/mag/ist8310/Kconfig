@@ -1,0 +1,23 @@
+# IST8310 MAG module configuration options
+
+# Copyright (c) 2022 Abel Sensors
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig IST8310
+	bool "IST8310 MAG Module"
+	help
+		Enable the driver for IST8310 MAG Module.
+
+if IST8310
+
+module = IST8310
+module-str = ist8310
+source "subsys/logging/Kconfig.template.log_config"
+
+config IST8310_INIT_PRIORITY
+	int "Counter init priority"
+	default 80
+	help
+		IST8310 driver device initialization priority.
+
+endif # IST8310
