@@ -457,6 +457,17 @@ zephyr_udc0: &usb1 {
  */
 &gpt_hw_timer {
 	status = "okay";
+	pinctrl-0 = <&pinmux_fmu_ppm_rc>;
+	compatible = "nxp,imx-gpt";
+	gptfreq = <25000000>;
+	clocks = <&ccm IMX_CCM_GPT_CLK 0x68 24>;
+/*      rc_input@0 {
+                compatible = "rc-input";
+                rssi_pwm_max = <-45>;
+                rssi_pwm_min = <-45>;
+                rc_input_proto = <RC_SCAN_PPM>;
+                rc_scan_max = <500>;
+        };*/
 };
 
 &systick {

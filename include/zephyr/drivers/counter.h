@@ -99,6 +99,24 @@ extern "C" {
  */
 #define COUNTER_GUARD_PERIOD_LATE_TO_SET BIT(0)
 
+/**
+ * @brief Capture flag to set capture on rising edge
+ *
+ */
+#define COUNTER_CAPTURE_CFG_OPERATION_MODE_RISING  BIT(1)
+
+/**
+ * @brief Capture flag to set capture on falling edge
+ *
+ */
+#define COUNTER_CAPTURE_CFG_OPERATION_MODE_FALLING  BIT(2)
+
+/**
+ * @brief Capture flag to set capture on rising edge
+ *
+ */
+#define COUNTER_CAPTURE_CFG_OPERATION_MODE_BOTH  BIT(3)
+
 /**@} */
 
 /** @brief Alarm callback
@@ -160,6 +178,29 @@ struct counter_top_cfg {
 	uint32_t flags;
 };
 
+/** @brief Callback called when capture happens.
+ *
+ * @param dev       Pointer to the device structure for the driver instance.
+ * @param user_data User data provided in @ref counter_set_capture_value.
+ */
+typedef void (*counter_capture_callback_t)(const struct device *dev,
+				       void *user_data);
+
+/** @brief Capture value configuration structure.
+ *
+ * @param ticks		Capture value.
+ * @param callback	Callback function. Can be NULL.
+ * @param user_data	User data passed to callback function. Not valid if
+ *			callback is NULL.
+ * @param flags		Flags. See @ref COUNTER_CAPTURE_FLAGS.
+ */
+struct counter_capture_cfg {
+	uint32_t ticks;
+	counter_capture_callback_t callback;
+	void *user_data;
+	uint32_t flags;
+};
+
 /** @brief Structure with generic counter features.
  *
  * @param max_top_value Maximal (default) top value on which counter is reset
@@ -198,6 +239,8 @@ typedef int (*counter_api_set_guard_period)(const struct device *dev,
 						uint32_t ticks,
 						uint32_t flags);
 typedef uint32_t (*counter_api_get_freq)(const struct device *dev);
+typedef int (*counter_api_setup_capture)(const struct device *dev,
+					 const struct counter_capture_cfg *cfg);
 
 __subsystem struct counter_driver_api {
 	counter_api_start start;
@@ -212,6 +255,7 @@ __subsystem struct counter_driver_api {
 	counter_api_get_guard_period get_guard_period;
 	counter_api_set_guard_period set_guard_period;
 	counter_api_get_freq get_freq;
+	counter_api_setup_capture setup_capture;
 };
 
 /**
@@ -504,6 +548,33 @@ static inline int z_impl_counter_set_top_value(const struct device *dev,
 	}
 
 	return api->set_top_value(dev, cfg);
+}
+
+/**
+ * @brief Setup Capture Parameters.
+ *
+ * Function sets up Input Operation Parameters will the pulse
+ * be captured on rising, falling or both the edges and also enables
+ * the interrupts for Capturing on
+ *
+ * @param dev		Pointer to the device structure for the driver instance.
+ * @param cfg		Configuration. Cannot be NULL.
+ *
+ * @retval 0 If successful.
+ * @retval -ENOTSUP if request is not supported
+ * @retval -EBUSY if any alarm is active.
+ */
+__syscall int counter_setup_capture(const struct device *dev,
+				    const struct counter_capture_cfg *cfg);
+
+static inline int z_impl_counter_setup_capture(const struct device *dev,
+					       const struct counter_capture_cfg
+					       *cfg)
+{
+	const struct counter_driver_api *api =
+				(struct counter_driver_api *)dev->api;
+
+	return api->setup_capture(dev, cfg);
 }
 
 /**

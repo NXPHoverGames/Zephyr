@@ -56,7 +56,7 @@ static int mcux_ccm_on(const struct device *dev,
 {
 	uint32_t clock_name = (uintptr_t)sub_system;
 	uint32_t instance = clock_name & IMX_CCM_INSTANCE_MASK;
-
+        printk("\n[SUMIT]mcux_ccm_on = 0x%x\n",instance);
 	switch (clock_name) {
 #ifdef CONFIG_UART_MCUX_IUART
 	case IMX_CCM_UART1_CLK:
@@ -98,7 +98,7 @@ static int mcux_ccm_get_subsys_rate(const struct device *dev,
 				    uint32_t *rate)
 {
 	uint32_t clock_name = (uintptr_t)sub_system;
-
+        printk("\n[SUMIT]mcux_ccm_get_subsys_rate SUBSYS NAME =0x%x\n",clock_name);
 	switch (clock_name) {
 
 #ifdef CONFIG_I2C_MCUX_LPI2C

@@ -131,7 +131,7 @@
 			compatible = "nxp,gpt-hw-timer";
 			reg = <0x401ec000 0x4000>;
 			interrupts = <100 0>;
-			status = "disabled";
+			status = "okay";
 		};
 
 		gpt2: gpt@401f0000 {
@@ -140,6 +140,7 @@
 			interrupts = <101 0>;
 			gptfreq = <25000000>;
 			clocks = <&ccm IMX_CCM_GPT_CLK 0x68 24>;
+                        status = "disabled";
 		};
 
 		qtmr1: qtmr@401dc000 {

@@ -12,8 +12,9 @@
 
 #define DELAY 2000000
 #define ALARM_CHANNEL_ID 0
-
+#if 0
 struct counter_alarm_cfg alarm_cfg;
+#endif
 
 #if defined(CONFIG_BOARD_ATSAMD20_XPRO)
 #define TIMER DT_NODELABEL(tc4)
@@ -43,8 +44,11 @@ struct counter_alarm_cfg alarm_cfg;
 #define TIMER DT_NODELABEL(rtcc0)
 #elif defined(CONFIG_COUNTER_GECKO_STIMER)
 #define TIMER DT_NODELABEL(stimer0)
+#elif defined(CONFIG_COUNTER_MCUX_GPT)
+#define TIMER DT_NODELABEL(gpt_hw_timer)
 #endif
 
+#if 0
 static void test_counter_interrupt_fn(const struct device *counter_dev,
 				      uint8_t chan_id, uint32_t ticks,
 				      void *user_data)
@@ -81,11 +85,16 @@ static void test_counter_interrupt_fn(const struct device *counter_dev,
 		printk("Alarm could not be set\n");
 	}
 }
+#endif
 
 int main(void)
 {
 	const struct device *const counter_dev = DEVICE_DT_GET(TIMER);
 	int err;
+	uint32_t now_ticks;
+	uint64_t now_usec;
+	int now_sec;
+        int ctr=0;
 
 	printk("Counter alarm sample\n\n");
 
@@ -94,8 +103,34 @@ int main(void)
 		return 0;
 	}
 
-	counter_start(counter_dev);
+#ifdef SUMIT_TEST
+        struct counter_capture_cfg capture_cfg = {
+		.callback = NULL,
+		.user_data = NULL,
+		.flags = 0
+	};
 
+	err = counter_setup_capture(counter_dev, &capture_cfg);
+	counter_start(counter_dev);
+#endif
+        /* Code to test if the counter is ticking */
+        while(ctr <2)
+        {
+                err = counter_get_value(counter_dev, &now_ticks);
+		if (err) {
+			printk("Failed to read counter value (err %d)", err);
+		        return err;
+		}
+
+	        now_usec = counter_ticks_to_us(counter_dev, now_ticks);
+		now_sec = (int)(now_usec / USEC_PER_SEC);
+
+	        printk("!!! Alarm !!!\n");
+		printk("Now: %u\n", now_sec);
+                ctr++;
+                k_sleep(K_MSEC(50));
+        }
+#if 0
 	alarm_cfg.flags = 0;
 	alarm_cfg.ticks = counter_us_to_ticks(counter_dev, DELAY);
 	alarm_cfg.callback = test_counter_interrupt_fn;
@@ -115,7 +150,7 @@ int main(void)
 	} else if (err != 0) {
 		printk("Error\n");
 	}
-
+#endif
 	while (1) {
 		k_sleep(K_FOREVER);
 	}
