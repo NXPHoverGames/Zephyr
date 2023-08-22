@@ -45,6 +45,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include "fsl_enet.h"
 #include "fsl_phy.h"
 #include "fsl_phyksz8081.h"
+#include "fsl_phytja11xx.h"
 #include "fsl_enet_mdio.h"
 #if defined(CONFIG_NET_POWER_MANAGEMENT)
 #include "fsl_clock.h"
@@ -58,6 +59,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #include "eth.h"
 
+/* Defines the PHY KSZ8081 Strapping Override Registers */
 #define PHY_OMS_OVERRIDE_REG 0x16U      /* The PHY Operation Mode Strap Override register. */
 #define PHY_OMS_STATUS_REG 0x17U        /* The PHY Operation Mode Strap Status register. */
 
@@ -190,6 +192,7 @@ struct eth_context {
 	uint32_t tx_irq_num;
 	phy_duplex_t phy_duplex;
 	phy_speed_t phy_speed;
+        phy_master_slave_mode_t phy_ms_mode;
 	uint8_t mac_addr[6];
 	void (*generate_mac)(uint8_t *);
 	struct k_work phy_work;
@@ -369,6 +372,7 @@ static void eth_mcux_phy_enter_reset(struct eth_context *context)
 
 static void eth_mcux_phy_start(struct eth_context *context)
 {
+        int ret;
 #if defined(CONFIG_ETH_MCUX_PHY_EXTRA_DEBUG)
 	LOG_DBG("%s phy_state=%s", eth_name(context->base),
 		phy_state_name(context->phy_state));
@@ -382,10 +386,17 @@ static void eth_mcux_phy_start(struct eth_context *context)
 		ENET_ActiveRead(context->base);
 		/* Reset the PHY. */
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
+#if 0
 		ENET_StartSMIWrite(context->base, context->phy_addr,
 				   PHY_BASICCONTROL_REG,
 				   kENET_MiiWriteValidFrame,
-				   PHY_BCTL_RESET_MASK);
+				   0x0);//PHY_BCTL_RESET_MASK);
+#endif
+                ENET_EnableInterrupts(context->base, ENET_EIR_MII_MASK);
+
+                /* TJA1103 DEVICE RESET */
+                ret = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x0040, 1<<15);
+                printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET ret =%d\n",ret);
 #else
 		/*
 		 * With no SMI communication one needs to wait for
@@ -451,9 +462,10 @@ static void eth_mcux_phy_event(struct eth_context *context)
 	uint32_t status;
 #endif
 	bool link_up;
+        uint16_t rmii_capable = 0;
 #if defined(CONFIG_SOC_SERIES_IMX_RT)
 	status_t res;
-	uint16_t ctrl2;
+	uint16_t ctrl2, phy_id;
 #endif
 	phy_duplex_t phy_duplex = kPHY_FullDuplex;
 	phy_speed_t phy_speed = kPHY_Speed100M;
@@ -465,19 +477,52 @@ static void eth_mcux_phy_event(struct eth_context *context)
 	switch (context->phy_state) {
 	case eth_mcux_phy_state_initial:
 #if defined(CONFIG_SOC_SERIES_IMX_RT)
-		ENET_DisableInterrupts(context->base, ENET_EIR_MII_MASK);
-		res = PHY_Read(context->phy_handle, PHY_CONTROL2_REG, &ctrl2);
-		ENET_EnableInterrupts(context->base, ENET_EIR_MII_MASK);
+//		ENET_DisableInterrupts(context->base, ENET_EIR_MII_MASK);
+#if 0
+	        res = PHY_Read(context->phy_handle, 0x2, &phy_id);
+        	if (res != kStatus_Success)
+                        printk("\n[SUMIT] PHY_read PHY_ID failed\n");
+                else
+                        printk("\n[SUMIT] PHY_read PHY_ID_1 =0x%x\n",phy_id);
+
+#endif
+//		res = PHY_Read(context->phy_handle, PHY_CONTROL2_REG, &ctrl2);
+  //                      printk("\n[SUMIT] PHY_read CTRL2 =0x%x\n",ctrl2);
+//		ENET_EnableInterrupts(context->base, ENET_EIR_MII_MASK);
+#if 0
 		if (res != kStatus_Success) {
 			LOG_WRN("Reading PHY reg failed (status 0x%x)", res);
 			k_work_submit(&context->phy_work);
 		} else {
-			ctrl2 |= PHY_CTL2_REFCLK_SELECT_MASK;
+			ctrl2 = 0;//|= PHY_CTL2_REFCLK_SELECT_MASK;
+                        printk("\n[SUMIT-1] PHY_Write CTRL2 =0x%x\n",ctrl2);
 			ENET_StartSMIWrite(context->base, context->phy_addr,
 					   PHY_CONTROL2_REG,
 					   kENET_MiiWriteValidFrame,
 					   ctrl2);
 		}
+#endif
+//                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x0040, ((1<<14) | (1<<13)));
+                //printk("\n[SSSUMIT] ENET_MDIOC45Write CONFIG Enable ret =%d\n", res);
+  //              k_usleep(425);
+
+                /* PORT CONTROL ENABLE*/ 
+    //            res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8040, 1<<14);
+
+                /* PHY CONTROL ENABLE */
+                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 1<<14);
+
+                /* INFRA CONTROL ENABLE */
+      //          res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0xAC00, 1<<14);
+
+                /* FORCED SLAVE MODE */
+                res = ENET_MDIOC45Write(context->base, context->phy_addr, 1, 0x0834, 0<<14);
+//                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8108, 1);
+//                res = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0xAFC4, &rmii_capable);
+                printk("\n[SUMIT-1] ENET_MDIOC45Read RMII Capable =0x%x\n",rmii_capable);
+                
+
+//#endif
 		context->phy_state = eth_mcux_phy_state_reset;
 #endif /* CONFIG_SOC_SERIES_IMX_RT */
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
@@ -506,12 +551,13 @@ static void eth_mcux_phy_event(struct eth_context *context)
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
 		ENET_StartSMIWrite(context->base, context->phy_addr,
 				   PHY_AUTONEG_ADVERTISE_REG,
-				   kENET_MiiWriteValidFrame,
+				   kENET_MiiWriteValidFrame,0x0);
+                                   /*
 				   (PHY_100BASETX_FULLDUPLEX_MASK |
 				    PHY_100BASETX_HALFDUPLEX_MASK |
 				    PHY_10BASETX_FULLDUPLEX_MASK |
 				    PHY_10BASETX_HALFDUPLEX_MASK |
-					PHY_IEEE802_3_SELECTOR_MASK));
+					PHY_IEEE802_3_SELECTOR_MASK));*/
 #endif
 		context->phy_state = eth_mcux_phy_state_autoneg;
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
@@ -523,9 +569,10 @@ static void eth_mcux_phy_event(struct eth_context *context)
 		/* Setup PHY autonegotiation. */
 		ENET_StartSMIWrite(context->base, context->phy_addr,
 				   PHY_BASICCONTROL_REG,
-				   kENET_MiiWriteValidFrame,
+				   kENET_MiiWriteValidFrame,0x0);
+                                   /*
 				   (PHY_BCTL_AUTONEG_MASK |
-				    PHY_BCTL_RESTART_AUTONEG_MASK));
+				    PHY_BCTL_RESTART_AUTONEG_MASK));*/
 #endif
 		context->phy_state = eth_mcux_phy_state_restart;
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
@@ -632,11 +679,21 @@ static void eth_mcux_phy_setup(struct eth_context *context)
 {
 #if defined(CONFIG_SOC_SERIES_IMX_RT)
 	status_t res;
-	uint16_t oms_override;
+	uint16_t oms_override = 0;
 
 	/* Disable MII interrupts to prevent triggering PHY events. */
 	ENET_DisableInterrupts(context->base, ENET_EIR_MII_MASK);
-
+#ifndef SUMIT
+#if 0
+	res = PHY_Read(context->phy_handle, 0x2, &oms_override);
+	if (res != kStatus_Success)
+                printk("\n[SUMIT] PHY_read PHY_ID failed\n");
+        else
+                printk("\n[SUMIT] PHY_read PHY_ID_1 =0x%x\n",oms_override);
+#endif
+#else
+        /* Prevent PHY KSZ8081 from entering Factory test 
+         * and NAND Tree mode */
 	res = PHY_Read(context->phy_handle,
 		       PHY_OMS_OVERRIDE_REG, &oms_override);
 	if (res != kStatus_Success) {
@@ -651,13 +708,14 @@ static void eth_mcux_phy_setup(struct eth_context *context)
 		if (oms_override & PHY_OMS_NANDTREE_MASK) {
 			oms_override &= ~PHY_OMS_NANDTREE_MASK;
 		}
-
-		res = PHY_Write(context->phy_handle,
+		
+                res = PHY_Write(context->phy_handle,
 				PHY_OMS_OVERRIDE_REG, oms_override);
 		if (res != kStatus_Success) {
 			LOG_WRN("Writing PHY reg failed (status 0x%x)", res);
 		}
 	}
+#endif
 
 	ENET_EnableInterrupts(context->base, ENET_EIR_MII_MASK);
 #endif
@@ -1019,7 +1077,7 @@ static void eth_mcux_init(const struct device *dev)
 #endif
 
 	context->phy_state = eth_mcux_phy_state_initial;
-	context->phy_handle->ops = &phyksz8081_ops;
+	context->phy_handle->ops = &phytja11xx_ops;//&phyksz8081_ops;
 
 #if defined(CONFIG_SOC_SERIES_IMX_RT10XX)
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(enet), okay)
@@ -1580,6 +1638,7 @@ static void eth_mcux_err_isr(const struct device *dev)
 		.phy_addr = DT_INST_PROP(n, phy_addr),		        \
 		.phy_duplex = kPHY_FullDuplex,				\
 		.phy_speed = kPHY_Speed100M,				\
+		.phy_ms_mode = kPHY_SlaveMode,				\
 		.phy_handle = &eth##n##_phy_handle,			\
 		.tx_frame_buf = tx_enet_frame_##n##_buf,		\
 		.rx_frame_buf = rx_enet_frame_##n##_buf,		\
