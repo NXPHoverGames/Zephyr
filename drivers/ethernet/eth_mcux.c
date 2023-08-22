@@ -357,12 +357,17 @@ static inline struct net_if *get_iface(struct eth_context *ctx, uint16_t vlan_ta
 
 static void eth_mcux_phy_enter_reset(struct eth_context *context)
 {
+#if 0
 	/* Reset the PHY. */
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
 	ENET_StartSMIWrite(context->base, context->phy_addr,
 			   PHY_BASICCONTROL_REG,
 			   kENET_MiiWriteValidFrame,
 			   PHY_BCTL_RESET_MASK);
+#endif
+#else
+        /* PHY RESET */
+       // ENET_MDIOC45Write(context->base, context->phy_addr, 3, 0x8100, 1<<15);
 #endif
 	context->phy_state = eth_mcux_phy_state_reset;
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
@@ -373,6 +378,7 @@ static void eth_mcux_phy_enter_reset(struct eth_context *context)
 static void eth_mcux_phy_start(struct eth_context *context)
 {
         int ret;
+        uint16_t reset_complete;
 #if defined(CONFIG_ETH_MCUX_PHY_EXTRA_DEBUG)
 	LOG_DBG("%s phy_state=%s", eth_name(context->base),
 		phy_state_name(context->phy_state));
@@ -397,6 +403,9 @@ static void eth_mcux_phy_start(struct eth_context *context)
                 /* TJA1103 DEVICE RESET */
                 ret = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x0040, 1<<15);
                 printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET ret =%d\n",ret);
+        //        k_usleep(425);
+                ret = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x0040, &reset_complete);
+                printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET COMPLETE =%d\n",reset_complete);
 #else
 		/*
 		 * With no SMI communication one needs to wait for
@@ -507,7 +516,7 @@ static void eth_mcux_phy_event(struct eth_context *context)
   //              k_usleep(425);
 
                 /* PORT CONTROL ENABLE*/ 
-    //            res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8040, 1<<14);
+//                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8040, 1<<14);
 
                 /* PHY CONTROL ENABLE */
                 res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 1<<14);
@@ -1149,7 +1158,7 @@ static void eth_mcux_init(const struct device *dev)
 #endif
 
 	/* handle PHY setup after SMI initialization */
-	eth_mcux_phy_setup(context);
+//	eth_mcux_phy_setup(context);
 
 #if defined(CONFIG_PTP_CLOCK_MCUX)
 	/* Enable reclaim of tx descriptors that will have the tx timestamp */
