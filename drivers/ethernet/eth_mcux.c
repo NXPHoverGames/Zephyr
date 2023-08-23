@@ -471,7 +471,7 @@ static void eth_mcux_phy_event(struct eth_context *context)
 	uint32_t status;
 #endif
 	bool link_up;
-        uint16_t rmii_capable = 0;
+        uint16_t ms_manual = 0, link_status = 2;
 #if defined(CONFIG_SOC_SERIES_IMX_RT)
 	status_t res;
 	uint16_t ctrl2, phy_id;
@@ -526,9 +526,18 @@ static void eth_mcux_phy_event(struct eth_context *context)
 
                 /* FORCED SLAVE MODE */
                 res = ENET_MDIOC45Write(context->base, context->phy_addr, 1, 0x0834, 0<<14);
+                
+                /* PHY CONFIG - POLARITY CORRECTION & SWAP */
+                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8108, ((1<<3) | (0<<2)));
+               
+                /* DISABLE PHY CONTROL */ 
+//                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 0<<14);
 //                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8108, 1);
-//                res = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0xAFC4, &rmii_capable);
-                printk("\n[SUMIT-1] ENET_MDIOC45Read RMII Capable =0x%x\n",rmii_capable);
+                res = ENET_MDIOC45Read(context->base, context->phy_addr, 1, 0x0834, &ms_manual);
+                printk("\n[SUMIT-1] ENET_MDIOC45Read MS Manual =0x%x\n",ms_manual);
+                
+                res = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x8102, &link_status);
+                printk("\n[SUMIT-1] ENET_MDIOC45Read Link Status =0x%x\n",link_status);
                 
 
 //#endif
@@ -557,6 +566,7 @@ static void eth_mcux_phy_event(struct eth_context *context)
 		break;
 	case eth_mcux_phy_state_reset:
 		/* Setup PHY autonegotiation. */
+#if 1
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
 		ENET_StartSMIWrite(context->base, context->phy_addr,
 				   PHY_AUTONEG_ADVERTISE_REG,
@@ -568,12 +578,14 @@ static void eth_mcux_phy_event(struct eth_context *context)
 				    PHY_10BASETX_HALFDUPLEX_MASK |
 					PHY_IEEE802_3_SELECTOR_MASK));*/
 #endif
+#endif
 		context->phy_state = eth_mcux_phy_state_autoneg;
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
 		k_work_submit(&context->phy_work);
 #endif
 		break;
 	case eth_mcux_phy_state_autoneg:
+#if 1
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
 		/* Setup PHY autonegotiation. */
 		ENET_StartSMIWrite(context->base, context->phy_addr,
@@ -582,6 +594,7 @@ static void eth_mcux_phy_event(struct eth_context *context)
                                    /*
 				   (PHY_BCTL_AUTONEG_MASK |
 				    PHY_BCTL_RESTART_AUTONEG_MASK));*/
+#endif
 #endif
 		context->phy_state = eth_mcux_phy_state_restart;
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
@@ -1154,7 +1167,7 @@ static void eth_mcux_init(const struct device *dev)
 #endif
 
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
-	ENET_SetSMI(context->base, sys_clock, false);
+	ENET_SetSMI(context->base, sys_clock, true);
 #endif
 
 	/* handle PHY setup after SMI initialization */
