@@ -534,10 +534,10 @@ static void eth_mcux_phy_event(struct eth_context *context)
 //                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 0<<14);
 //                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8108, 1);
     //            res = ENET_MDIOC45Read(context->base, context->phy_addr, 1, 0x0834, &ms_manual);
-                printk("\n[SUMIT-1] ENET_MDIOC45Read MS Manual =0x%x\n",ms_manual);
+//                printk("\n[SUMIT-1] ENET_MDIOC45Read MS Manual =0x%x\n",ms_manual);
                 
-                res = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x8102, &link_status);
-                printk("\n[SUMIT-1] ENET_MDIOC45Read Link Status =0x%x\n",link_status);
+  //              res = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x8102, &link_status);
+//                printk("\n[SUMIT-1] ENET_MDIOC45Read Link Status =0x%x\n",link_status);
                 
 
 //#endif
@@ -579,7 +579,7 @@ static void eth_mcux_phy_event(struct eth_context *context)
 					PHY_IEEE802_3_SELECTOR_MASK));*/
 #else
 
-                printk("\n[COW] eth_mcux_phy_state_reset\n");
+//                printk("\n[COW] eth_mcux_phy_state_reset\n");
 #endif
 #endif
 		context->phy_state = eth_mcux_phy_state_autoneg;
@@ -599,7 +599,7 @@ static void eth_mcux_phy_event(struct eth_context *context)
 				    PHY_BCTL_RESTART_AUTONEG_MASK));*/
 #else
 
-                printk("\n[GOAT] eth_mcux_phy_state_autoneg\n");
+//                printk("\n[GOAT] eth_mcux_phy_state_autoneg\n");
 #endif
 #endif
 		context->phy_state = eth_mcux_phy_state_restart;
@@ -615,8 +615,8 @@ static void eth_mcux_phy_event(struct eth_context *context)
 				  PHY_BASICSTATUS_REG,
 				  kENET_MiiReadValidFrame);
 #else
-                if(context->phy_state == eth_mcux_phy_state_restart)
-                        printk("\n[GOAT] eth_mcux_phy_state_restart \n");
+  //              if(context->phy_state == eth_mcux_phy_state_restart)
+//                        printk("\n[GOAT] eth_mcux_phy_state_restart \n");
 #endif
 		context->phy_state = eth_mcux_phy_state_read_status;
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
@@ -668,7 +668,7 @@ static void eth_mcux_phy_event(struct eth_context *context)
 #else
 	//	status = ENET_ReadSMIData(context->base);
                 status = 0x6;
-                printk("\n[GOAT] eth_mcux_phy_state_read_duplex ENET_ReadSMIData status  0x%x\n",status);
+//                printk("\n[GOAT] eth_mcux_phy_state_read_duplex ENET_ReadSMIData status  0x%x\n",status);
 		eth_mcux_decode_duplex_and_speed(status,
 						 &phy_duplex,
 						 &phy_speed);
@@ -686,6 +686,22 @@ static void eth_mcux_phy_event(struct eth_context *context)
 			eth_name(context->base),
 			(phy_speed ? "100" : "10"),
 			(phy_duplex ? "full" : "half"));
+	        
+                ENET_SetSMI(context->base, 50000000, false);
+//                ENET_EnableInterrupts(context->base, ENET_EIR_MII_MASK);
+                
+                /* TJA1103 DEVICE RESET */
+                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x0040, 1<<15);
+                printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET res =%d\n",res);
+                
+                /* PHY CONTROL ENABLE */
+                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 1<<14);
+                /* FORCED SLAVE MODE */
+                res = ENET_MDIOC45Write(context->base, context->phy_addr, 1, 0x0834, 0<<14);
+                
+                res = ENET_MDIOC45Read(context->base, context->phy_addr, 1, 0x0834, &ms_manual);
+                printk("\n[SUMIT-1] ENET_MDIOC45Read MS Manual =0x%x\n",ms_manual);
+
 		k_work_reschedule(&context->delayed_phy_work,
 				  K_MSEC(CONFIG_ETH_MCUX_PHY_TICK_MS));
 		context->phy_state = eth_mcux_phy_state_wait;
@@ -1131,6 +1147,8 @@ static void eth_mcux_init(const struct device *dev)
 	enet_config.interrupt |= kENET_TxFrameInterrupt;
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
 	enet_config.interrupt |= kENET_MiiInterrupt;
+#else
+	//enet_config.interrupt |= kENET_MiiInterrupt;
 #endif
 	enet_config.miiMode = kENET_RmiiMode;
 
