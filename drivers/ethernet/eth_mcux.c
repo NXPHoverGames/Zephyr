@@ -519,21 +519,21 @@ static void eth_mcux_phy_event(struct eth_context *context)
 //                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8040, 1<<14);
 
                 /* PHY CONTROL ENABLE */
-                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 1<<14);
+//                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 1<<14);
 
                 /* INFRA CONTROL ENABLE */
       //          res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0xAC00, 1<<14);
 
                 /* FORCED SLAVE MODE */
-                res = ENET_MDIOC45Write(context->base, context->phy_addr, 1, 0x0834, 0<<14);
+  //              res = ENET_MDIOC45Write(context->base, context->phy_addr, 1, 0x0834, 0<<14);
                 
                 /* PHY CONFIG - POLARITY CORRECTION & SWAP */
-                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8108, ((1<<3) | (0<<2)));
+                //res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8108, ((1<<3) | (0<<2)));
                
                 /* DISABLE PHY CONTROL */ 
 //                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 0<<14);
 //                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8108, 1);
-                res = ENET_MDIOC45Read(context->base, context->phy_addr, 1, 0x0834, &ms_manual);
+    //            res = ENET_MDIOC45Read(context->base, context->phy_addr, 1, 0x0834, &ms_manual);
                 printk("\n[SUMIT-1] ENET_MDIOC45Read MS Manual =0x%x\n",ms_manual);
                 
                 res = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x8102, &link_status);
@@ -577,6 +577,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
 				    PHY_10BASETX_FULLDUPLEX_MASK |
 				    PHY_10BASETX_HALFDUPLEX_MASK |
 					PHY_IEEE802_3_SELECTOR_MASK));*/
+#else
+
+                printk("\n[COW] eth_mcux_phy_state_reset\n");
 #endif
 #endif
 		context->phy_state = eth_mcux_phy_state_autoneg;
@@ -594,6 +597,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
                                    /*
 				   (PHY_BCTL_AUTONEG_MASK |
 				    PHY_BCTL_RESTART_AUTONEG_MASK));*/
+#else
+
+                printk("\n[GOAT] eth_mcux_phy_state_autoneg\n");
 #endif
 #endif
 		context->phy_state = eth_mcux_phy_state_restart;
@@ -608,6 +614,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
 		ENET_StartSMIRead(context->base, context->phy_addr,
 				  PHY_BASICSTATUS_REG,
 				  kENET_MiiReadValidFrame);
+#else
+                if(context->phy_state == eth_mcux_phy_state_restart)
+                        printk("\n[GOAT] eth_mcux_phy_state_restart \n");
 #endif
 		context->phy_state = eth_mcux_phy_state_read_status;
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
@@ -619,8 +628,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
 #if defined(CONFIG_ETH_MCUX_NO_PHY_SMI) && ETH_MCUX_FIXED_LINK
 		link_up = true;
 #else
-		status = ENET_ReadSMIData(context->base);
-		link_up =  status & PHY_BSTATUS_LINKSTATUS_MASK;
+//		status = ENET_ReadSMIData(context->base);
+  //              printk("\n[GOAT] eth_mcux_phy_state_read_status ENET_ReadSMIData status  0x%x\n",status);
+		link_up =  1;//status & PHY_BSTATUS_LINKSTATUS_MASK;
 #endif
 		if (link_up && !context->link_up && context->iface != NULL) {
 			/* Start reading the PHY control register. */
@@ -656,7 +666,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
 		eth_mcux_get_phy_params(&phy_duplex, &phy_speed);
 		LOG_INF("%s - Fixed Link", eth_name(context->base));
 #else
-		status = ENET_ReadSMIData(context->base);
+	//	status = ENET_ReadSMIData(context->base);
+                status = 0x6;
+                printk("\n[GOAT] eth_mcux_phy_state_read_duplex ENET_ReadSMIData status  0x%x\n",status);
 		eth_mcux_decode_duplex_and_speed(status,
 						 &phy_duplex,
 						 &phy_speed);
@@ -1167,7 +1179,7 @@ static void eth_mcux_init(const struct device *dev)
 #endif
 
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
-	ENET_SetSMI(context->base, sys_clock, true);
+	ENET_SetSMI(context->base, sys_clock, false);
 #endif
 
 	/* handle PHY setup after SMI initialization */
