@@ -398,14 +398,14 @@ static void eth_mcux_phy_start(struct eth_context *context)
 				   kENET_MiiWriteValidFrame,
 				   0x0);//PHY_BCTL_RESET_MASK);
 #endif
-                ENET_EnableInterrupts(context->base, ENET_EIR_MII_MASK);
+            //    ENET_EnableInterrupts(context->base, ENET_EIR_MII_MASK);
 
                 /* TJA1103 DEVICE RESET */
-                ret = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x0040, 1<<15);
-                printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET ret =%d\n",ret);
-        //        k_usleep(425);
-                ret = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x0040, &reset_complete);
-                printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET COMPLETE =%d\n",reset_complete);
+//                ret = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x0040, 1<<15);
+ //               printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET ret =%d\n",ret);
+//                k_usleep(425);
+//                ret = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x0040, &reset_complete);
+  //              printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET COMPLETE =%d\n",reset_complete);
 #else
 		/*
 		 * With no SMI communication one needs to wait for
@@ -568,9 +568,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
 		/* Setup PHY autonegotiation. */
 #if 1
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
-		ENET_StartSMIWrite(context->base, context->phy_addr,
-				   PHY_AUTONEG_ADVERTISE_REG,
-				   kENET_MiiWriteValidFrame,0x0);
+//		ENET_StartSMIWrite(context->base, context->phy_addr,
+//				   PHY_AUTONEG_ADVERTISE_REG,
+//				   kENET_MiiWriteValidFrame,0x0);
                                    /*
 				   (PHY_100BASETX_FULLDUPLEX_MASK |
 				    PHY_100BASETX_HALFDUPLEX_MASK |
@@ -591,9 +591,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
 #if 1
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
 		/* Setup PHY autonegotiation. */
-		ENET_StartSMIWrite(context->base, context->phy_addr,
-				   PHY_BASICCONTROL_REG,
-				   kENET_MiiWriteValidFrame,0x0);
+//		ENET_StartSMIWrite(context->base, context->phy_addr,
+//				   PHY_BASICCONTROL_REG,
+//				   kENET_MiiWriteValidFrame,0x0);
                                    /*
 				   (PHY_BCTL_AUTONEG_MASK |
 				    PHY_BCTL_RESTART_AUTONEG_MASK));*/
@@ -611,9 +611,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
 	case eth_mcux_phy_state_restart:
 		/* Start reading the PHY basic status. */
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
-		ENET_StartSMIRead(context->base, context->phy_addr,
-				  PHY_BASICSTATUS_REG,
-				  kENET_MiiReadValidFrame);
+//		ENET_StartSMIRead(context->base, context->phy_addr,
+//				  PHY_BASICSTATUS_REG,
+//				  kENET_MiiReadValidFrame);
 #else
   //              if(context->phy_state == eth_mcux_phy_state_restart)
 //                        printk("\n[GOAT] eth_mcux_phy_state_restart \n");
@@ -635,9 +635,9 @@ static void eth_mcux_phy_event(struct eth_context *context)
 		if (link_up && !context->link_up && context->iface != NULL) {
 			/* Start reading the PHY control register. */
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
-			ENET_StartSMIRead(context->base, context->phy_addr,
-					  PHY_CONTROL1_REG,
-					  kENET_MiiReadValidFrame);
+	//		ENET_StartSMIRead(context->base, context->phy_addr,
+	//				  PHY_CONTROL1_REG,
+	//				  kENET_MiiReadValidFrame);
 #endif
 			context->link_up = link_up;
 			context->phy_state = eth_mcux_phy_state_read_duplex;
@@ -687,20 +687,25 @@ static void eth_mcux_phy_event(struct eth_context *context)
 			(phy_speed ? "100" : "10"),
 			(phy_duplex ? "full" : "half"));
 	        
-                ENET_SetSMI(context->base, 50000000, false);
+//                ENET_SetSMI(context->base, 50000000, false);
 //                ENET_EnableInterrupts(context->base, ENET_EIR_MII_MASK);
                 
                 /* TJA1103 DEVICE RESET */
-                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x0040, 1<<15);
-                printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET res =%d\n",res);
+//                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x0040, 1<<15);
+  //              printk("\n[SSSUMIT] ENET_MDIOC45Write DEVICE RESET res =%d\n",res);
                 
                 /* PHY CONTROL ENABLE */
-                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 1<<14);
+                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 0x4001);
                 /* FORCED SLAVE MODE */
                 res = ENET_MDIOC45Write(context->base, context->phy_addr, 1, 0x0834, 0<<14);
                 
+                res = ENET_MDIOC45Write(context->base, context->phy_addr, 30, 0x8100, 0x0001);
+                
                 res = ENET_MDIOC45Read(context->base, context->phy_addr, 1, 0x0834, &ms_manual);
-                printk("\n[SUMIT-1] ENET_MDIOC45Read MS Manual =0x%x\n",ms_manual);
+//                res = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x0, &ms_manual);
+//                res = ENET_MDIOC45Read(context->base, context->phy_addr, 30, 0x801F, &ms_manual);
+                //printk("\n[SUMIT-1] ENET_MDIOC45Read PHY Addr= %d MMD1 Reg 801F =0x%x\n",context->phy_addr, ms_manual);
+                printk("\n[SUMIT-1] ENET_MDIOC45Read PHY Addr= %d MMD1 Reg#834 =0x%x\n",context->phy_addr, ms_manual);
 
 		k_work_reschedule(&context->delayed_phy_work,
 				  K_MSEC(CONFIG_ETH_MCUX_PHY_TICK_MS));
@@ -1199,6 +1204,7 @@ static void eth_mcux_init(const struct device *dev)
 #if !defined(CONFIG_ETH_MCUX_NO_PHY_SMI)
 	ENET_SetSMI(context->base, sys_clock, false);
 #endif
+	ENET_SetSMI(context->base, sys_clock, false);
 
 	/* handle PHY setup after SMI initialization */
 //	eth_mcux_phy_setup(context);
