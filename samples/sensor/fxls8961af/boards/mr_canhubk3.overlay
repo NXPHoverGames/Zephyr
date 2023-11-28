@@ -1,0 +1,24 @@
+/*
+ * Copyright 2023 NXP
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/spi/spi.h>
+
+&lpspi4 {
+	pinctrl-0 = <&lpspi4_default>;
+	pinctrl-names = "default";
+	data-pin-config = "sdo-in,sdi-out";
+	status = "okay";
+
+	transfer-delay = <2000>;
+
+	fxls8961af: accelerometer@0 {
+		status = "okay";
+		compatible = "nxp,fxls8961af";
+		reg = <0>;
+		spi-max-frequency = <4000000>;
+		duplex = <SPI_FULL_DUPLEX>;
+	};
+};

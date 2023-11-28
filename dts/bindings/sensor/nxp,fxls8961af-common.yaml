@@ -1,0 +1,6 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+description: FXLS8961AF 3-axis accelerometer sensor
+
+include: sensor-device.yaml
