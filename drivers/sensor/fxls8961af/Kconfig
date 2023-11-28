@@ -1,0 +1,23 @@
+# FXLS8961AF 3-axis accelerometer
+
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig FXLS8961AF
+	bool "FXLS8961AF MAG Module"
+	help
+		Enable the driver for FXLS8961AF accelerometer.
+
+if FXLS8961AF
+
+module = FXLS8961AF
+module-str = fxls8961af
+source "subsys/logging/Kconfig.template.log_config"
+
+config FXLS8961AF_INIT_PRIORITY
+	int "Counter init priority"
+	default 80
+	help
+		FXLS8961AF driver device initialization priority.
+
+endif # FXLS8961AF
