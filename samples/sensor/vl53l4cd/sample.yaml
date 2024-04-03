@@ -1,0 +1,12 @@
+# Copyright 2024 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+sample:
+  name: Sample for MEMS sensors VL53L4CD
+tests:
+  sample.sensor.vl53l4cd:
+    build_only: true
+    depends_on:
+      - i2c
+      - vl53l4cd
+    tags: sensors

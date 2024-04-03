@@ -1,0 +1,34 @@
+/*
+ * Copyright 2024 NXP
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&eirq0_default {
+	group1 {
+		pinmux = <PTD15_EIRQ31>, <PTA18_EIRQ0>, <PTA25_EIRQ5>,
+			 <PTD5_EIRQ13>, <PTA11_EIRQ19>, <PTE1_EIRQ1>;
+		input-enable;
+	};
+};
+
+&gpioa_l {
+	status = "okay";
+};
+
+&gpioe_l {
+	status = "okay";
+};
+
+&lpi2c0 { /* Note: lpi2c0 represents the I2C port on MR-CANHUBK3-ADAP. */
+	status = "okay";
+
+	st_vl53l4cd@29 {
+		compatible = "st,vl53l4cd";
+		reg = <0x29>;
+		status = "okay";
+
+		int-gpios = <&gpioa_l 11 GPIO_ACTIVE_LOW>; /* EXT_GPIO1 */
+		xshut-gpios = <&gpioe_l 1 GPIO_ACTIVE_HIGH>; /* EXT_GPIO2 */
+	};
+};

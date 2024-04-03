@@ -1,0 +1,71 @@
+/*
+ * Copyright 2024 NXP
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&eirq0_default {
+	group1 {
+		pinmux = <PTD15_EIRQ31>, <PTA18_EIRQ0>, <PTA25_EIRQ5>,
+			 <PTD5_EIRQ13>, <PTA11_EIRQ19>, <PTE1_EIRQ1>;
+		input-enable;
+	};
+};
+
+&gpioa_l {
+	status = "okay";
+};
+
+&gpioe_l {
+	status = "okay";
+};
+
+&gpioe_h {
+	status = "okay";
+};
+
+&lpi2c1 {
+	status = "okay";
+
+	mux: tca9548a@77 { /* Address depends on the hardware configuration. */
+		compatible = "ti,tca9548a";
+		reg = <0x77>;
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		// reset-gpios = <&gpio5 3 GPIO_ACTIVE_LOW>;
+
+		mux_i2c@0 {
+			compatible = "ti,tca9548a-channel";
+			reg = <0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			st_vl53l4cd_0: st_vl53l4cd_0@29 {
+				compatible = "st,vl53l4cd";
+				reg = <0x29>;
+				status = "okay";
+
+				int-gpios = <&gpioa_l 11 GPIO_ACTIVE_LOW>; /* EXT_GPIO1 */
+				xshut-gpios = <&gpioe_h 10 GPIO_ACTIVE_HIGH>; /* EXT_GPIO3 */
+			};
+		};
+
+		mux_i2c@1 {
+			compatible = "ti,tca9548a-channel";
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			st_vl53l4cd_1: st_vl53l4cd_1@29 {
+				compatible = "st,vl53l4cd";
+				reg = <0x29>;
+				status = "okay";
+
+				int-gpios = <&gpioe_l 1 GPIO_ACTIVE_LOW>; /* EXT_GPIO2 */
+				xshut-gpios = <&gpioa_l 12 GPIO_ACTIVE_HIGH>; /* EXT_GPIO4 */
+			};
+		};
+	};
+};

@@ -1,0 +1,52 @@
+# VL53L4CD time of flight sensor configuration options
+
+# Copyright 2024 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig VL53L4CD
+	bool "VL53L4CD time of flight sensor"
+	default y
+	depends on DT_HAS_ST_VL53L4CD_ENABLED
+	select I2C
+	help
+	  Enable driver for VL53L4CD I2C-based time of flight sensor.
+
+if VL53L4CD
+
+config VL53L4CD_INTERRUPT_MODE
+	bool "Use interrupt mode for VL53L4CD time of flight sensor"
+	default y
+	depends on GPIO
+	help
+	  Enable interrupt mode for VL53L4CD time of flight sensor.
+	  Otherwise, the driver will use the polling method.
+
+config VL53L4CD_XSHUT
+	bool "Use xshut pin on VL53L4CD time of flight sensor"
+	default n
+	depends on GPIO
+	help
+	  Enable to use the xshut pin on the VL53L4CD.
+	  If not, the pin should be connected to VDD.
+
+endif # VL53L4CD
+
+config VL53L4CD_PROXIMITY_THRESHOLD
+	int "Proximity threshold in millimeters"
+	default 100
+	depends on VL53L4CD
+	help
+	  Threshold used for proximity detection when sensor is used with SENSOR_CHAN_PROX.
+
+config VL53L4CD_RECONFIGURE_ADDRESS
+	bool "Support reconfigurable sensor address"
+	depends on VL53L4CD
+	depends on VL53L4CD_XSHUT
+	help
+	  Enable support for reconfiguring the sensor address at runtime.
+	  When this option is enabled, all sensors declared on the same i2c bus in the device tree
+	  must have an xshut-gpio property.
+
+	  All sensors are disabled during initialization. When read the first value from a sensor
+	  (by calling sample_fetch API), it is powered up and its I2C address is reconfigured from
+	  the manufacturer default '0x29' to the address specified in the device tree.
